@@ -4,7 +4,7 @@ This repository demonstrates the optimization of **UUIDv7** generation on the JV
 
 ## 🚀 The Results
 
-Benchmarks were run on Android (Pixel/Emulator) using Jetpack Benchmark.
+Benchmarks were run on Android (Pixel 10 Pro) using Jetpack Benchmark.
 
 ### vs Native Java UUID (Summary)
 
@@ -74,10 +74,23 @@ To ensure monotonicity (increasing sort order) without locking, we pack the time
 ### 3. Correctness vs Speed
 The final implementation handles the edge case of **Sequence Overflow** (generating >4096 IDs in a single millisecond). If the sequence rolls over (`0xFFF`), we artificially increment the timestamp to preserve sort order, ensuring strict monotonicity even under heavy load.
 
-## 📦 How to Run
+## 📦 How to Run the Benchmarks
 
-1. Clone the repo.
-2. Open in Android Studio.
-3. Run the benchmarks in `UUIDBenchmark.kt` using the Android Gradle Plugin benchmark runner:
-```bash
-./gradlew :benchmark:connectedCheck
+The benchmark suite is configured to run on a connected Android device. Due to the complexities of file permissions on modern Android versions (Scoped Storage), running the benchmarks from within Android Studio is the most reliable method.
+
+### Running from Android Studio (Recommended)
+
+1.  **Open the Project:** Open the project in a recent version of Android Studio.
+2.  **Locate the Benchmark File:** Navigate to the test file:
+    `benchmark/src/androidTest/java/io/legere/benchmark/UUIDBenchmark.kt`.
+3.  **Run the Benchmarks:** You will see green "play" icons in the gutter next to the class definition and each individual test method (`@Test`).
+
+    *   To run **all** benchmarks, click the play icon next to the `class UUIDBenchmark` line and select "Run 'UUIDBenchmark'".
+    *   To run a **specific** benchmark, click the play icon next to that `@Test` function (e.g., `benchmarkUUIDv7String`).
+
+    ![Run from Gutter](https://user-images.githubusercontent.com/1392632/194429210-2d6a54a9-17d4-4927-8671-502a1e360249.png)
+
+4.  **Select a Device:** Choose your connected device from the dropdown menu and run the configuration.
+5.  **View Results:** The benchmark results will appear in the **Run** tool window within Android Studio. It provides a clear, digestible summary of the timings and allocation counts for each test.
+
+This approach bypasses the command-line file-pulling issues and gives you immediate, actionable results directly in the IDE.
