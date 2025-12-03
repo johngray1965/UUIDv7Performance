@@ -1,33 +1,14 @@
-package io.legere.uuidv7
-/**
- *     DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
- *            Version 2, December 2004
- *
- *  Copyright (C) 2024 0xShamil
- *
- *  Everyone is permitted to copy and distribute verbatim or modified
- *  copies of this license document, and changing it is allowed as long
- *  as the name is changed.
- *
- *             DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
- *    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
- *
- *   0. You just DO WHAT THE FUCK YOU WANT TO.
+/*
+ * Copyright (c) 2025.  Legere. All rights reserved.
  */
 
-import io.legere.uuidv7.UUIDv7r2.lastMillis
-import io.legere.uuidv7.UUIDv7r2.lastSeq12
-import java.util.UUID
+package io.legere.uuidv7
+
+import java.util.*
 import java.util.concurrent.ThreadLocalRandom
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
-/**
- * Interface to abstract the source of randomness.
- */
-
-
-object UUIDv7r2 {
+object UUIDv7r4 {
     private val HEX_DIGITS =
         charArrayOf(
             '0',
@@ -48,86 +29,77 @@ object UUIDv7r2 {
             'f'
         )
 
-    var randomProvider: RandomProvider = FastRandomProvider
-
-    // Shared monotonic states
-    private val lastMillis = AtomicLong(Long.MIN_VALUE)
-    private val lastSeq12 = AtomicInteger(-1)
+    // Shared monotonic state
+    // Stores the 48-bit timestamp and 12-bit sequence in a single 64-bit Long.
+    // Layout: [Timestamp (52 bits allowed, 48 used)] [Sequence (12 bits)]
+    private val state = AtomicLong(0L)
 
     /**
      * @return A UUID object representing a UUIDv7 value.
      */
     fun randomUUID(): UUID = generate { msb, lsb -> UUID(msb, lsb) }
+
     fun randomUUIDString(): String = generate { msb, lsb -> fastUuidString(msb, lsb) }
 
-    /**
-     * Generates the most significant bits (MSB) and least significant bits (LSB) for a UUIDv7
-     * and passes them to the provided [block].
-     *
-     * MSB Layout:
-     * - 48 bits: Timestamp
-     * -  4 bits: Version (7)
-     * - 12 bits: Sequence
-     *
-     * LSB Layout:
-     * -  2 bits: Variant (2)
-     * - 62 bits: Random
-     *
-     * @param block A function that accepts the MSB and LSB and returns a result of type [T].
-     * @return The result returned by [block].
-     */
     private inline fun <T> generate(block: (Long, Long) -> T): T {
-        val now = System.currentTimeMillis()
-        val prev = lastMillis.get()
+        // 1. Get the RandomProvider (volatile read) once
         val provider = ThreadLocalRandom.current()
-        val ts = if (now >= prev) now else prev // clamp to avoid regressions
-        var seq: Int
+        val now = System.currentTimeMillis()
+
+        var ts: Long
+        var newState: Long
+
+
+        // 2. Monotonic CAS Loop (Inlined to avoid Pair allocation)
         while (true) {
-            val lastTs = lastMillis.get()
-            val lastSeq = lastSeq12.get()
+            val current = state.get()
+            val lastTs = current ushr 16
+            val lastSeq = current and 0xFFF
 
-            if (ts != lastTs) {
-                // New millisecond: randomize the starting point to retain entropy
-                val seeded = provider.nextInt(1 shl 12)
-                if (lastMillis.compareAndSet(lastTs, ts)) {
-                    lastSeq12.set(seeded)
-                    seq = seeded
-                    break
+            // 1. Clamp timestamp (Monotonicity vs Clock Rollback)
+            ts = if (now >= lastTs) now else lastTs
 
+            // 2. Determine if we need a new random sequence
+            //    True if: Time moved forward OR Sequence ran out (overflow)
+            val sequenceOverflow = lastSeq == 0xFFFL
+            val needsRandom = (ts != lastTs) || sequenceOverflow
+
+            val nextSeq = if (needsRandom) {
+                // If we are here purely due to overflow, we MUST push time forward
+                // to preserve sort order.
+                if (sequenceOverflow && ts == lastTs) {
+                    ts++
                 }
+
+                // Optimization: nextInt(4096) is effectively (nextLong() & 0xFFF)
+                // if the RNG is good, but nextInt handles the bound logic.
+                provider.nextInt(4096).toLong()
             } else {
-                // Same millisecond: increment and wrap in 12 bits
-                val next = (lastSeq + 1) and 0x0FFF
-                if (lastSeq12.compareAndSet(lastSeq, next)) {
-                    seq = next
-                    break
-                }
+                lastSeq + 1
             }
-            // If either CAS fails, retry with fresh reads
+
+            // 3. Pack directly into MSB format
+            //    (48-bit Timestamp | 4-bit Version (7) | 12-bit Sequence)
+            newState = (ts shl 16) or 0x7000L or nextSeq
+
+            if (state.compareAndSet(current, newState)) {
+                break
+            }
+            // If CAS fails, loop again
         }
 
-        // High 64 bits:
-        // 48 bits timestamp
-        // 4 bits version (7)
-        // 12 bits sequence (high part of random)
-        val msb = (ts shl 16) or 0x7000L or seq.toLong()
+        // 3. Construct High 64 bits
+        // newState = (ts shl 16) or 0x7000L or nextSeqU
+        val msb = newState
 
-        // Low 64 bits:
-        // 2 bits variant (2)
-        // 62 bits random
+        // 4. Construct Low 64 bits
+        // 2 bits variant (2) | 62 bits random
+        // Fast path optimization to avoid interface dispatch
         val randomLow = provider.nextLong()
         val lsb = (randomLow and 0x3FFFFFFFFFFFFFFFL) or Long.MIN_VALUE
 
         return block(msb, lsb)
     }
-
-    /**
-     * Returns the 12-bit monotonic sequence for the given millisecond:
-     * - If [ts] differs from the last seen timestamp, seed with a random 12-bit value.
-     * - If [ts] matches, increment modulo 4096 to preserve order for same-ms calls.
-     *
-     * Uses CAS on [lastMillis]/[lastSeq12] to remain lock-light under contention.
-     */
 
     fun fastUuidString(
         msb: Long,

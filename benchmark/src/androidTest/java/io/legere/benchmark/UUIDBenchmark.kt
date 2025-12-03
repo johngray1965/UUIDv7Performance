@@ -7,7 +7,7 @@ package io.legere.benchmark
 import androidx.benchmark.junit4.BenchmarkRule
 import androidx.benchmark.junit4.measureRepeated
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.legere.utils.UUIDv7r4
+import io.legere.uuidv7.UUIDv7r4
 import io.legere.uuidv7.UUIDv7
 import io.legere.uuidv7.UUIDv7r0
 import io.legere.uuidv7.UUIDv7r01
