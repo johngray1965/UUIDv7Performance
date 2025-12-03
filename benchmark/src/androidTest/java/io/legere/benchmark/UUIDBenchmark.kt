@@ -10,6 +10,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.legere.utils.UUIDv7r4
 import io.legere.uuidv7.UUIDv7
 import io.legere.uuidv7.UUIDv7r0
+import io.legere.uuidv7.UUIDv7r01
 import io.legere.uuidv7.UUIDv7r2
 import java.util.*
 import org.junit.Rule
@@ -25,6 +26,13 @@ class UUIDBenchmark {
     fun benchmarkUUIDv7r0() {
         benchmarkRule.measureRepeated {
             UUIDv7r0.randomUUID()
+        }
+    }
+
+    @Test
+    fun benchmarkUUIDv7r01() {
+        benchmarkRule.measureRepeated {
+            UUIDv7r01.randomUUID()
         }
     }
 
