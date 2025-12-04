@@ -34,7 +34,9 @@ object UUIDv7r5 {
     // Layout: [Timestamp (52 bits allowed, 48 used)] [Sequence (12 bits)]
     private val state = AtomicLong(0L)
 
-    private val threadLocalBuffer = ThreadLocal.withInitial { CharArray(36) }
+    private val threadLocalBuffer = object : ThreadLocal<CharArray>() {
+        override fun initialValue() = CharArray(36)
+    }
 
     /**
      * @return A UUID object representing a UUIDv7 value.
@@ -98,7 +100,7 @@ object UUIDv7r5 {
         // 2 bits variant (2) | 62 bits random
         // Fast path optimization to avoid interface dispatch
         val randomLow = provider.nextLong()
-        val lsb = (randomLow and 0x3FFFFFFFFFFFFFFFL) or Long.MIN_VALUE
+        val lsb = (randomLow ushr 2) or Long.MIN_VALUE
 
         return block(msb, lsb)
     }
@@ -107,44 +109,44 @@ object UUIDv7r5 {
         msb: Long,
         lsb: Long
     ): String {
-        val buf = threadLocalBuffer.get() ?: CharArray(36)
-
-        buf[0] = HEX_DIGITS[((msb ushr 60) and 0xF).toInt()]
-        buf[1] = HEX_DIGITS[((msb ushr 56) and 0xF).toInt()]
-        buf[2] = HEX_DIGITS[((msb ushr 52) and 0xF).toInt()]
-        buf[3] = HEX_DIGITS[((msb ushr 48) and 0xF).toInt()]
-        buf[4] = HEX_DIGITS[((msb ushr 44) and 0xF).toInt()]
-        buf[5] = HEX_DIGITS[((msb ushr 40) and 0xF).toInt()]
-        buf[6] = HEX_DIGITS[((msb ushr 36) and 0xF).toInt()]
-        buf[7] = HEX_DIGITS[((msb ushr 32) and 0xF).toInt()]
+        val buf = threadLocalBuffer.get()!! // its not null
+        val digits = HEX_DIGITS // Optimization: Local ref for faster JIT access
+        buf[0] = digits[((msb ushr 60) and 0xF).toInt()]
+        buf[1] = digits[((msb ushr 56) and 0xF).toInt()]
+        buf[2] = digits[((msb ushr 52) and 0xF).toInt()]
+        buf[3] = digits[((msb ushr 48) and 0xF).toInt()]
+        buf[4] = digits[((msb ushr 44) and 0xF).toInt()]
+        buf[5] = digits[((msb ushr 40) and 0xF).toInt()]
+        buf[6] = digits[((msb ushr 36) and 0xF).toInt()]
+        buf[7] = digits[((msb ushr 32) and 0xF).toInt()]
         buf[8] = '-'
-        buf[9] = HEX_DIGITS[((msb ushr 28) and 0xF).toInt()]
-        buf[10] = HEX_DIGITS[((msb ushr 24) and 0xF).toInt()]
-        buf[11] = HEX_DIGITS[((msb ushr 20) and 0xF).toInt()]
-        buf[12] = HEX_DIGITS[((msb ushr 16) and 0xF).toInt()]
+        buf[9] = digits[((msb ushr 28) and 0xF).toInt()]
+        buf[10] = digits[((msb ushr 24) and 0xF).toInt()]
+        buf[11] = digits[((msb ushr 20) and 0xF).toInt()]
+        buf[12] = digits[((msb ushr 16) and 0xF).toInt()]
         buf[13] = '-'
-        buf[14] = HEX_DIGITS[((msb ushr 12) and 0xF).toInt()]
-        buf[15] = HEX_DIGITS[((msb ushr 8) and 0xF).toInt()]
-        buf[16] = HEX_DIGITS[((msb ushr 4) and 0xF).toInt()]
-        buf[17] = HEX_DIGITS[(msb and 0xF).toInt()]
+        buf[14] = digits[((msb ushr 12) and 0xF).toInt()]
+        buf[15] = digits[((msb ushr 8) and 0xF).toInt()]
+        buf[16] = digits[((msb ushr 4) and 0xF).toInt()]
+        buf[17] = digits[(msb and 0xF).toInt()]
         buf[18] = '-'
-        buf[19] = HEX_DIGITS[((lsb ushr 60) and 0xF).toInt()]
-        buf[20] = HEX_DIGITS[((lsb ushr 56) and 0xF).toInt()]
-        buf[21] = HEX_DIGITS[((lsb ushr 52) and 0xF).toInt()]
-        buf[22] = HEX_DIGITS[((lsb ushr 48) and 0xF).toInt()]
+        buf[19] = digits[((lsb ushr 60) and 0xF).toInt()]
+        buf[20] = digits[((lsb ushr 56) and 0xF).toInt()]
+        buf[21] = digits[((lsb ushr 52) and 0xF).toInt()]
+        buf[22] = digits[((lsb ushr 48) and 0xF).toInt()]
         buf[23] = '-'
-        buf[24] = HEX_DIGITS[((lsb ushr 44) and 0xF).toInt()]
-        buf[25] = HEX_DIGITS[((lsb ushr 40) and 0xF).toInt()]
-        buf[26] = HEX_DIGITS[((lsb ushr 36) and 0xF).toInt()]
-        buf[27] = HEX_DIGITS[((lsb ushr 32) and 0xF).toInt()]
-        buf[28] = HEX_DIGITS[((lsb ushr 28) and 0xF).toInt()]
-        buf[29] = HEX_DIGITS[((lsb ushr 24) and 0xF).toInt()]
-        buf[30] = HEX_DIGITS[((lsb ushr 20) and 0xF).toInt()]
-        buf[31] = HEX_DIGITS[((lsb ushr 16) and 0xF).toInt()]
-        buf[32] = HEX_DIGITS[((lsb ushr 12) and 0xF).toInt()]
-        buf[33] = HEX_DIGITS[((lsb ushr 8) and 0xF).toInt()]
-        buf[34] = HEX_DIGITS[((lsb ushr 4) and 0xF).toInt()]
-        buf[35] = HEX_DIGITS[(lsb and 0xF).toInt()]
+        buf[24] = digits[((lsb ushr 44) and 0xF).toInt()]
+        buf[25] = digits[((lsb ushr 40) and 0xF).toInt()]
+        buf[26] = digits[((lsb ushr 36) and 0xF).toInt()]
+        buf[27] = digits[((lsb ushr 32) and 0xF).toInt()]
+        buf[28] = digits[((lsb ushr 28) and 0xF).toInt()]
+        buf[29] = digits[((lsb ushr 24) and 0xF).toInt()]
+        buf[30] = digits[((lsb ushr 20) and 0xF).toInt()]
+        buf[31] = digits[((lsb ushr 16) and 0xF).toInt()]
+        buf[32] = digits[((lsb ushr 12) and 0xF).toInt()]
+        buf[33] = digits[((lsb ushr 8) and 0xF).toInt()]
+        buf[34] = digits[((lsb ushr 4) and 0xF).toInt()]
+        buf[35] = digits[(lsb and 0xF).toInt()]
         return String(buf)
     }
 }

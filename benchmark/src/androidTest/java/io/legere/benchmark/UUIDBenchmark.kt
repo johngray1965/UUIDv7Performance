@@ -66,6 +66,13 @@ class UUIDBenchmark {
     }
 
     @Test
+    fun benchmarkUUIDv7r5() {
+        benchmarkRule.measureRepeated {
+            UUIDv7r5.randomUUID()
+        }
+    }
+
+    @Test
     fun benchmarkUUIDv4() {
         benchmarkRule.measureRepeated {
             UUID.randomUUID()
