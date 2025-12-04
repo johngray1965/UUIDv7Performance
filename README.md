@@ -8,27 +8,27 @@ Benchmarks were run on Android (Pixel 10 Pro) using Jetpack Benchmark.
 
 ### vs Native Java UUID (Summary)
 
-| Implementation | Time (Total) | Allocations | Speedup |
-| :--- | :--- | :--- | :--- |
-| **Legere UUIDv7** | **129 ns** | **2** | **~17.4x Faster** |
-| `java.util.UUID` (v4) | 2,249 ns | 22 | 1x (Baseline) |
+| Implementation | Time (Total) | Allocations | Speedup           |
+| :--- |:-------------|:------------|:------------------|
+| **Legere UUIDv7** | **92 ns**    | **1**       | **~10.6x Faster** |
+| `java.util.UUID` (v4) | 981 ns     | 22          | 1x (Baseline)     |
 
 *Note: "Total" includes both generating the ID and converting it to a formatted String.*
 
 ### Detailed Breakdown
 
-| Benchmark Case | Time (ns) | Allocations | Notes |
-| :--- | :--- | :--- | :--- |
-| `UUIDv7.generate()` | **50.0 ns** | **0** | Raw generation (Longs only) |
-| `UUIDv7.toString()` | **77.0 ns** | **2** | Custom char buffer formatting |
-| `UUID.randomUUID()` | ~300-500 ns | 1+ | Native generation cost |
-| `UUID.toString()` | 674 ns | 19-20 | Native string formatting cost |
+| Benchmark Case | Time (ns)   | Allocations | Notes |
+| :--- |:------------|:------------| :--- |
+| `UUIDv7.generate()` | **50.0 ns** | **0**       | Raw generation (Longs only) |
+| `UUIDv7.toString()` | **50.0 ns** | **1**       | Custom char buffer formatting |
+| `UUID.randomUUID()` | ~300-500 ns | 1+          | Native generation cost |
+| `UUID.toString()` | 674 ns      | 19-20       | Native string formatting cost |
 
 ---
 
 ## 🧬 The Evolution of Optimization
 
-This repository includes 6 variations (`r0` through `r4`/final) showing the step-by-step optimization process.
+This repository includes 6 variations (`r0` through `r5`/final) showing the step-by-step optimization process.
 
 ### 1. `r0` - The Baseline
 *   **Approach:** Port of a standard Kotlin UUIDv7 implementation.
@@ -50,13 +50,18 @@ This repository includes 6 variations (`r0` through `r4`/final) showing the step
 *   **Performance:** ~54ns
 *   **Result:** Near-zero allocation for the generation phase.
 
-### 5. `r4` - The "Zero Cost" Implementation (Final)
+### 5. `r4` - The "Zero Cost" Implementation
 *   **Change:**
     *   **Merged Atomics:** Combined `timestamp` and `sequence` into a single `AtomicLong` to perform one CAS (Compare-and-Swap) operation instead of two.
     *   **MSB Storage:** Stores the data in the AtomicLong *already formatted* as the UUID's Most Significant Bits, removing bit-shift overhead during read.
     *   **Hoisted RNG:** Calls `ThreadLocalRandom.current()` exactly once per generation.
     *   **Branch Prediction:** Optimized the monotonic check to favor the "hot path" (same millisecond).
 *   **Performance:** **50.0 ns** (0 Allocations)
+
+### 6. `r5` - The randomUUIDString improvement (Final)
+*   **Change:**
+    *   **LocalStorage:** Moved the buffer in randomUUIDString to LocalStorage
+*   **Performance:** **50.0 ns** (1 Allocations) for the String conversion
 *   **Result:** Hit the theoretical limit of JVM performance.
 
 ---
