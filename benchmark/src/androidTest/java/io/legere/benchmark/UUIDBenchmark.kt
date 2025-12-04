@@ -7,11 +7,12 @@ package io.legere.benchmark
 import androidx.benchmark.junit4.BenchmarkRule
 import androidx.benchmark.junit4.measureRepeated
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.legere.uuidv7.UUIDv7r4
-import io.legere.uuidv7.UUIDv7
 import io.legere.uuidv7.UUIDv7r0
 import io.legere.uuidv7.UUIDv7r01
 import io.legere.uuidv7.UUIDv7r2
+import io.legere.uuidv7.UUIDv7r3
+import io.legere.uuidv7.UUIDv7r4
+import io.legere.uuidv7.UUIDv7r5
 import java.util.*
 import org.junit.Rule
 import org.junit.Test
@@ -51,16 +52,16 @@ class UUIDBenchmark {
     }
 
     @Test
-    fun benchmarkUUIDv7r4() {
+    fun benchmarkUUIDv7r3() {
         benchmarkRule.measureRepeated {
-            UUIDv7r4.randomUUID()
+            UUIDv7r3.randomUUID()
         }
     }
 
     @Test
-    fun benchmarkUUIDv7() {
+    fun benchmarkUUIDv7r4() {
         benchmarkRule.measureRepeated {
-            UUIDv7.randomUUID()
+            UUIDv7r4.randomUUID()
         }
     }
 
@@ -78,7 +79,18 @@ class UUIDBenchmark {
         val lsb = uuid.leastSignificantBits
 
         benchmarkRule.measureRepeated {
-            UUIDv7.fastUuidString(msb, lsb)
+            UUIDv7r4.fastUuidString(msb, lsb)
+        }
+    }
+
+    @Test
+    fun benchmarkFormattingOnly_ThreadLocalBuffer() {
+        val uuid = UUID.randomUUID()
+        val msb = uuid.mostSignificantBits
+        val lsb = uuid.leastSignificantBits
+
+        benchmarkRule.measureRepeated {
+            UUIDv7r5.fastUuidString(msb, lsb)
         }
     }
 
