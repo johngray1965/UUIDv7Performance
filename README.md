@@ -6,8 +6,8 @@ Where we started:
 
 | Implementation | Time (Total) | Speedup | 
 | :--- |:-------------|:------------------| 
-| UUIDv7 (Initial) | ~330 ns | Slower | 
-| java.util.UUID (v4) | 981 ns | 1x (Baseline) |
+| Initial UUIDv7 | ~330 ns | Slower | 
+| java.util.UUID (v4) | ~300 ns |Baseline |
 ## 🚀 The Results
 
 Benchmarks were run on a Pixel 10 Pro using Jetpack Microbenchmark, which accounts for JIT/AOT warm-up and provides stable, reliable metrics.
