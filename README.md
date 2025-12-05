@@ -2,6 +2,12 @@
 
 This repository documents the deep optimization of a **UUIDv7** generator for Kotlin, achieving a **~12x performance increase** over the standard `java.util.UUID` on Android. It serves as a practical case study in low-level performance tuning on the ART runtime.
 
+Where we started:
+
+| Implementation | Time (Total) | Speedup | 
+| :--- |:-------------|:------------------| 
+| UUIDv7 (Initial) | ~330 ns | Slower | 
+| java.util.UUID (v4) | 981 ns | 1x (Baseline) |
 ## 🚀 The Results
 
 Benchmarks were run on a Pixel 10 Pro using Jetpack Microbenchmark, which accounts for JIT/AOT warm-up and provides stable, reliable metrics.
@@ -10,7 +16,7 @@ Benchmarks were run on a Pixel 10 Pro using Jetpack Microbenchmark, which accoun
 
 | Implementation | Time (Total) | Allocations | Speedup |
 | :--- |:-------------|:------------|:------------------|
-| **Legere UUIDv7** | **82.0 ns** | **1** | **~11.9x Faster** |
+| **UUIDv7** | **82.0 ns** | **1** | **~11.9x Faster** |
 | `java.util.UUID` (v4) | 981 ns | ~20 | 1x (Baseline) |
 
 *Note: "Total" includes both generating the ID and converting it to a formatted String. The single allocation in our implementation is the final `String` object itself.*
