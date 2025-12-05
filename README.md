@@ -28,10 +28,10 @@ Benchmarks were run on Android (Pixel 10 Pro) using Jetpack Benchmark.
 
 ## 🧬 The Evolution of Optimization
 
-This repository includes 6 variations (`r0` through `r5`/final) showing the step-by-step optimization process.
+This repository includes 6 variations (`r0` through `r6`/final) showing the step-by-step optimization process.
 
 ### 1. `r0` - The Baseline
-*   **Approach:** Port of a standard Kotlin UUIDv7 implementation.
+*   **Approach:** Port of Shamil Choudhury's Kotlin UUIDv7 implementation.
 *   **Performance:** ~327ns
 *   **Bottleneck:** Uses `SecureRandom` (expensive synchronization/OS calls) and standard byte-array manipulation.
 
