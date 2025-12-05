@@ -10,8 +10,8 @@ Benchmarks were run on Android (Pixel 10 Pro) using Jetpack Benchmark.
 
 | Implementation | Time (Total) | Allocations | Speedup           |
 | :--- |:-------------|:------------|:------------------|
-| **Legere UUIDv7** | **92 ns**    | **1**       | **~10.6x Faster** |
-| `java.util.UUID` (v4) | 981 ns     | 22          | 1x (Baseline)     |
+| **Legere UUIDv7** | **82 ns**    | **1**       | **~11.9x Faster** |
+| `java.util.UUID` (v4) | 981 ns       | 22          | 1x (Baseline)     |
 
 *Note: "Total" includes both generating the ID and converting it to a formatted String.*
 
@@ -20,7 +20,7 @@ Benchmarks were run on Android (Pixel 10 Pro) using Jetpack Benchmark.
 | Benchmark Case | Time (ns)   | Allocations | Notes |
 | :--- |:------------|:------------| :--- |
 | `UUIDv7.generate()` | **50.0 ns** | **0**       | Raw generation (Longs only) |
-| `UUIDv7.toString()` | **50.0 ns** | **1**       | Custom char buffer formatting |
+| `UUIDv7.toString()` | **45.0 ns** | **1**       | Custom char buffer formatting |
 | `UUID.randomUUID()` | ~300-500 ns | 1+          | Native generation cost |
 | `UUID.toString()` | 674 ns      | 19-20       | Native string formatting cost |
 
@@ -62,6 +62,11 @@ This repository includes 6 variations (`r0` through `r5`/final) showing the step
 *   **Change:**
     *   **LocalStorage:** Moved the buffer in randomUUIDString to LocalStorage
 *   **Performance:** **50.0 ns** (1 Allocations) for the String conversion
+* 
+### 7. `r6` - The randomUUIDString improvement (Final)
+*   **Change:**
+    *   **Reduce toInt() count:** Rewrote randomUUIDString to only do 4 onInt()s (was 32).
+*   **Performance:** **45.0 ns** (1 Allocations) for the String conversion
 *   **Result:** Hit the theoretical limit of JVM performance.
 
 ---

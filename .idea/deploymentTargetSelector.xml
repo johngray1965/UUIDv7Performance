@@ -5,6 +5,9 @@
       <SelectionState runConfigName="UUIDBenchmark">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
+      <SelectionState runConfigName="benchmarkR6String()">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
     </selectionStates>
   </component>
 </project>

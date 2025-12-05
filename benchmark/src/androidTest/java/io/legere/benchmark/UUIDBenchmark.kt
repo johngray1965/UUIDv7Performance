@@ -13,6 +13,7 @@ import io.legere.uuidv7.UUIDv7r2
 import io.legere.uuidv7.UUIDv7r3
 import io.legere.uuidv7.UUIDv7r4
 import io.legere.uuidv7.UUIDv7r5
+import io.legere.uuidv7.UUIDv7r6
 import java.util.*
 import org.junit.Rule
 import org.junit.Test
@@ -73,6 +74,13 @@ class UUIDBenchmark {
     }
 
     @Test
+    fun benchmarkUUIDv7r6() {
+        benchmarkRule.measureRepeated {
+            UUIDv7r6.randomUUID()
+        }
+    }
+
+    @Test
     fun benchmarkUUIDv4() {
         benchmarkRule.measureRepeated {
             UUID.randomUUID()
@@ -98,6 +106,25 @@ class UUIDBenchmark {
 
         benchmarkRule.measureRepeated {
             UUIDv7r5.fastUuidString(msb, lsb)
+        }
+    }
+
+    @Test
+    fun benchmarkFormattingOnlyr6() {
+        val uuid = UUID.randomUUID()
+        val msb = uuid.mostSignificantBits
+        val lsb = uuid.leastSignificantBits
+
+        benchmarkRule.measureRepeated {
+            UUIDv7r6.fastUuidString(msb, lsb)
+        }
+    }
+
+    @Test
+    fun benchmarkR6String() {
+
+        benchmarkRule.measureRepeated {
+            UUIDv7r6.randomUUIDString()
         }
     }
 
